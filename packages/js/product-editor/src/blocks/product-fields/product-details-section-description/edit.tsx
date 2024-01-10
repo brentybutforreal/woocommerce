@@ -117,12 +117,19 @@ export function ProductDetailsSectionDescriptionBlockEdit( {
 
 				await validate( productTemplate.productData );
 
-				await editEntityRecord(
-					'postType',
-					'product',
-					productId,
-					productTemplate.productData
-				);
+				const productMetaData =
+					productTemplate.productData.meta_data ?? [];
+
+				await editEntityRecord( 'postType', 'product', productId, {
+					...productTemplate.productData,
+					meta_data: [
+						...productMetaData,
+						{
+							key: '_product_template_id',
+							value: productTemplate.id,
+						},
+					],
+				} );
 
 				await saveEditedEntityRecord< Product >(
 					'postType',
@@ -196,7 +203,10 @@ export function ProductDetailsSectionDescriptionBlockEdit( {
 		try {
 			if ( isSaving ) return;
 
-			await validate( unsupportedProductTemplate?.productData );
+			const { id: productTemplateId, productData } =
+				unsupportedProductTemplate as ProductTemplate;
+
+			await validate( productData );
 
 			const product = ( await saveEditedEntityRecord< Product >(
 				'postType',
@@ -207,6 +217,8 @@ export function ProductDetailsSectionDescriptionBlockEdit( {
 				}
 			) ) ?? { id: productId };
 
+			const productMetaData = productData?.meta_data ?? [];
+
 			// Avoiding to save some changes that are not supported by the current product template.
 			// So in this case those changes are saved directly to the server.
 			await saveEntityRecord(
@@ -214,7 +226,14 @@ export function ProductDetailsSectionDescriptionBlockEdit( {
 				'product',
 				{
 					...product,
-					...unsupportedProductTemplate?.productData,
+					...productData,
+					meta_data: [
+						...productMetaData,
+						{
+							key: '_product_template_id',
+							value: productTemplateId,
+						},
+					],
 				},
 				// @ts-expect-error Expected 3 arguments, but got 4.
 				{
