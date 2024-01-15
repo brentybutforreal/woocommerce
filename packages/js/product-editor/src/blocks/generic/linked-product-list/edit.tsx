@@ -6,6 +6,7 @@ import {
 	useCallback,
 	useEffect,
 	useReducer,
+	useState,
 } from '@wordpress/element';
 import { useWooBlockProps } from '@woocommerce/block-templates';
 import { Product } from '@woocommerce/data';
@@ -125,6 +126,8 @@ export function LinkedProductListBlockEdit( {
 		setLinkedProductIds( newLinkedProductIds );
 	}
 
+	const [ isChoosingProducts, setIsChoosingProducts ] = useState( false );
+
 	async function chooseProductsForMe() {
 		dispatch( {
 			type: 'LOADING_LINKED_PRODUCTS',
@@ -132,6 +135,8 @@ export function LinkedProductListBlockEdit( {
 				isLoading: true,
 			},
 		} );
+
+		setIsChoosingProducts( true );
 
 		const relatedProducts = ( await getRelatedProducts(
 			productId
@@ -143,6 +148,8 @@ export function LinkedProductListBlockEdit( {
 				isLoading: false,
 			},
 		} );
+
+		setIsChoosingProducts( false );
 
 		if ( ! relatedProducts ) {
 			return;
@@ -163,6 +170,7 @@ export function LinkedProductListBlockEdit( {
 					variant="tertiary"
 					icon={ reusableBlock }
 					onClick={ chooseProductsForMe }
+					isBusy={ isChoosingProducts }
 				>
 					{ __( 'Choose products for me', 'woocommerce' ) }
 				</Button>
